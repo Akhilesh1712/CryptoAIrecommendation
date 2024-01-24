@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <!-- Surprise.js -->
+    <script src="https://cdn.jsdelivr.net/npm/surprisejs@1.0.0/dist/surprise.js"></script>
+
+    <title>Crypto Recommendation System</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        margin: 20px;
+        padding: 20px;
+        background-color: #092440;
+      }
+
+      h1,
+      h2 {
+        text-align: center;
+        color: #939ba5;
+        margin-bottom: 30px;
+      }
+
+      form {
+        max-width: 400px;
+        margin: 20px auto;
+        background-color: #cdc8a4;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+      }
+
+      button {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #218838;
+      }
+
+      #recommendations {
+        margin-top: 30px;
+      }
+
+      #recommendations img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .fadeIn {
+        animation: fadeIn 1s;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Crypto Recommendation System</h1>
+
+    <form id="riskForm">
+      <label for="riskAmount">Select Amount of Trade or Crypto to Risk:</label>
+      <input
+        type="number"
+        id="riskAmount"
+        name="riskAmount"
+        placeholder="Enter Amount"
+        required
+      />
+
+      <label for="crypto">Select Cryptocurrency:</label>
+      <select id="crypto" name="crypto" required>
+        <option value="Bitcoin">Bitcoin</option>
+        <option value="Ethereum">Ethereum</option>
+        <!-- Add more options for other cryptocurrencies as needed -->
+      </select>
+
+      <button type="button" onclick="getRecommendations()">
+        Get Recommendations
+      </button>
+    </form>
+
+    <div id="recommendations"></div>
+
+    <script>
+      // Simulated recommendation data
+      const recommendationData = [
+        { name: "Bitcoin", rating: 0.8, image: "bitcoin.png" },
+        { name: "Ethereum", rating: 0.7, image: "ethereum.png" },
+        // Add more cryptocurrencies as needed
+      ];
+
+      function getRecommendations() {
+        const userId = 1; // You can set this dynamically based on the user
+        const selectedCrypto = document.getElementById("crypto").value;
+
+        // Prepare data for Surprise.js
+        const surpriseData = recommendationData.map((crypto) => ({
+          user: userId,
+          item: crypto.name,
+          rating: crypto.rating,
+        }));
+
+        // Create a Surprise.js dataset
+        const reader = new surprise.Reader({ line_format: "user item rating" });
+        const dataset = new surprise.Dataset.load_from_df(surpriseData, reader);
+
+        // Build a collaborative filtering model
+        const model = new surprise.SVD();
+        const trainingSet = dataset.build_full_trainset();
+        model.fit(trainingSet);
+
+        // Get recommendations for the selected cryptocurrency
+        const recommendations = model.get_neighbors(selectedCrypto, 5); // Get top 5 recommendations
+
+        displayRecommendations(selectedCrypto, recommendations);
+      }
+
+      function displayRecommendations(selectedCrypto, recommendations) {
+        const recommendationsDiv = document.getElementById("recommendations");
+        recommendationsDiv.innerHTML = `<h2>Top Recommendations for ${selectedCrypto}</h2>`;
+
+        recommendations.forEach((cryptoName) => {
+          const recommendedCrypto = recommendationData.find(
+            (crypto) => crypto.name === cryptoName
+          );
+          recommendationsDiv.innerHTML += `
+                    <div class="card fadeIn">
+                        <h5 class="card-title">${recommendedCrypto.name}</h5>
+                        <img src="${recommendedCrypto.image}" class="card-img-top" alt="${recommendedCrypto.name}">
+                        <div class="card-body">
+                            <p class="card-text">Rating: ${recommendedCrypto.rating}</p>
+                        </div>
+                    </div>`;
+        });
+      }
+    </script>
+  </body>
+</html>
